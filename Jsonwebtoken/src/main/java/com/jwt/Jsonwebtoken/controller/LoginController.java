@@ -11,7 +11,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.jwt.Jsonwebtoken.request.LoginRequest;
 import com.jwt.Jsonwebtoken.request.SignUpRequest;
+import com.jwt.Jsonwebtoken.request.TokenRefreshRequest;
 import com.jwt.Jsonwebtoken.response.ApiResponse;
+import com.jwt.Jsonwebtoken.response.TokenRefreshResponse;
 import com.jwt.Jsonwebtoken.service.LoginService;
 import com.jwt.Jsonwebtoken.util.JwtUtils;
 
@@ -36,15 +38,25 @@ public class LoginController {
 		return apiResponse;
 	}
 
+	@GetMapping("/refreshtoken")
+	public TokenRefreshResponse geRefreshResponse(@RequestBody TokenRefreshRequest request) {
+		return loginService.getNewAccessToken(request);
+	}
+
 	@GetMapping("/privateApi")
 	public ResponseEntity<ApiResponse> privateApi(
-	@RequestHeader(value = "authorization", defaultValue = "") String auth) throws Exception {
+			@RequestHeader(value = "authorization", defaultValue = "") String auth) throws Exception {
 		ApiResponse apiResponse = new ApiResponse();
 		System.out.println(auth);
 		jwtUtils.verify(auth);
 
 		apiResponse.setData("this is private api");
 		return ResponseEntity.status(apiResponse.getStatus()).body(apiResponse);
+	}
+
+	@GetMapping("/testmethod")
+	public String testMethod() {
+		return "this test-method-is-running";
 	}
 
 }

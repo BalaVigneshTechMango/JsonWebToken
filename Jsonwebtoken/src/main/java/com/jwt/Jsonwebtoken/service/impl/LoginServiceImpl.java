@@ -1,5 +1,8 @@
 package com.jwt.Jsonwebtoken.service.impl;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -7,7 +10,9 @@ import com.jwt.Jsonwebtoken.entity.UserEntity;
 import com.jwt.Jsonwebtoken.repository.UserRepository;
 import com.jwt.Jsonwebtoken.request.LoginRequest;
 import com.jwt.Jsonwebtoken.request.SignUpRequest;
+import com.jwt.Jsonwebtoken.request.TokenRefreshRequest;
 import com.jwt.Jsonwebtoken.response.ApiResponse;
+import com.jwt.Jsonwebtoken.response.TokenRefreshResponse;
 import com.jwt.Jsonwebtoken.service.LoginService;
 import com.jwt.Jsonwebtoken.util.JwtUtils;
 
@@ -28,7 +33,6 @@ public class LoginServiceImpl implements LoginService {
 		userEntity.setEmailId(signUpRequest.getEmailId());
 		userEntity.setPassword(signUpRequest.getPassword());
 		userEntity.setPhoneNumber(signUpRequest.getPhoneNumber());
-
 		userRepository.save(userEntity);
 		return apiResponse;
 	}
@@ -44,19 +48,18 @@ public class LoginServiceImpl implements LoginService {
 		}
 		String token = jwtUtils.generateJwt(userEntity);
 		apiResponse.setData(token);
-		
-         return apiResponse;
+		Map<String, Object> data = new HashMap<>();
+		data.put("accessToken", token);
+
+		apiResponse.setData(data);
+
+		return apiResponse;
+	}
+
+	@Override
+	public TokenRefreshResponse getNewAccessToken(TokenRefreshRequest request) {
+		String newAccessToken=jwtUtils.getNewAccessToken(request);
+		return new TokenRefreshResponse(newAccessToken);	
 	}
 
 }
-
-
-
-
-
-
-
-
-
-
-

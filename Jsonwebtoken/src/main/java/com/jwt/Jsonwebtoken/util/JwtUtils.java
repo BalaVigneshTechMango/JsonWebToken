@@ -1,9 +1,15 @@
 package com.jwt.Jsonwebtoken.util;
 
-import java.nio.file.AccessDeniedException;
 import java.sql.Date;
+import java.util.Base64;
+import java.util.HashMap;
+import java.util.Map;
+
+import org.json.JSONObject;
 import org.springframework.stereotype.Component;
 import com.jwt.Jsonwebtoken.entity.UserEntity;
+import com.jwt.Jsonwebtoken.request.TokenRefreshRequest;
+
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
@@ -11,18 +17,18 @@ import io.jsonwebtoken.SignatureAlgorithm;
 @Component
 public class JwtUtils {
 	private static String secret = "This_is_secret";
-	private static long expiryDuration = 60 * 60; //sec and mins
-    
+	private static long expiryDuration = 60 * 60; // sec and mins
+
 	public String generateJwt(UserEntity userEntity) {
 		int id = userEntity.getUserid();
 		String idString = String.valueOf(id);
-		
+
 		long milliTime = System.currentTimeMillis();
 		long expiryTime = milliTime + expiryDuration * 1000;
 
 		Date issuedAt = new Date(milliTime);
 		Date expiryAt = new Date(expiryTime);
-		// claims
+
 		Claims claims = Jwts.claims().setIssuer(idString).setIssuedAt(issuedAt).setExpiration(expiryAt);
 		// optional claims
 		claims.put("name", userEntity.getFullName());
@@ -39,8 +45,24 @@ public class JwtUtils {
 			Claims claims = Jwts.parser().setSigningKey(secret).parseClaimsJws(auth).getBody();
 			return claims;
 		} catch (Exception e) {
-			throw new AccessDeniedException("Access Denied");
+			throw new com.jwt.Jsonwebtoken.exception.AccessDeniedException("Access Denied");
 		}
+
+	}
+
+	private static String decode(String encodedString) {
+		return new String(Base64.getUrlDecoder().decode(encodedString));
+	}
+
+	public String getNewAccessToken(TokenRefreshRequest request) {
+		String refreshToken = request.getRefreshToken();
+		Map<String, Object> claims = new HashMap<>();
+		String[] parts = refreshToken.split("\\.");
+		JSONObject payload = new JSONObject(decode(parts[1]));   
+		String subject = payload.getString("sub");																
+		return Jwts.builder().setClaims(claims).setSubject(subject).setIssuedAt(new Date(System.currentTimeMillis()))
+				.setExpiration(new Date(System.currentTimeMillis() * expiryDuration))
+				.signWith(SignatureAlgorithm.HS512, secret).compact();
 
 	}
 }
