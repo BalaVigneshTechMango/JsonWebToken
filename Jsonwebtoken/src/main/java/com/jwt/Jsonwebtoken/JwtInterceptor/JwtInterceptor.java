@@ -25,7 +25,6 @@ public class JwtInterceptor extends HandlerInterceptorAdapter {
 		if (!(request.getRequestURI().contains("login") || request.getRequestURI().contains("signup"))) {
 			Claims claims = jwtUtils.verify(auth);
 		}
-
 		return super.preHandle(request, response, handler);
 	}
 }
